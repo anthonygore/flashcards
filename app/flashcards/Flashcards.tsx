@@ -9,7 +9,6 @@ import type { AppDispatch } from "~/store"
 export default function Flashcards() {
     const cards = useSelector(selectCards)
     const dispatch = useDispatch<AppDispatch>()
-    dispatch(flashcardsFetch())
     const [currentCardIndex, setCurrentCardIndex] = useState(0)
     const [currentCard, setCurrentCard] = useState<Card | null>(null)
     const [sortedCards, setSortedCards] = useState<Card[]>([])
@@ -23,6 +22,10 @@ export default function Flashcards() {
     }
 
     type SortCard = Card & { sort: number }
+
+    useEffect(() => {
+        dispatch(flashcardsFetch())
+    }, [dispatch])
     
     useEffect(() => {
         setSortedCards(cards.map((value: Card) => ({ value, sort: Math.random() }))

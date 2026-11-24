@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { Card } from "./types";
 import type { RootState } from "~/store";
+import { marked } from "marked";
 
 interface FlashcardsState {
     cards: Card[]
@@ -8,15 +9,18 @@ interface FlashcardsState {
 
 export const flashcardsFetch = createAsyncThunk(
   'flashcards/fetch',
-  async (userId: number) => {
-    const response = fetch('./interview-questions.md')
-    console.log(response);
-    return response.data
+  async () => {
+    const response = await fetch('http://localhost:5173/interview-questions.md')
+    return await response.text();
   },
 )
 
 const initialState: FlashcardsState = {
-    cards: []
+    cards: [] as Card[]
+}
+
+function parseMd(str: string) {
+    return str.split('###').map(block => ({ question: marked(block.split('\n')[0]), answer: marked(block.split('\n').slice(1).join('\n'))}) as Card)
 }
 
 export const flashcardsSlice = createSlice({
@@ -25,8 +29,7 @@ export const flashcardsSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
     builder.addCase(flashcardsFetch.fulfilled, (state, action) => {
-      console.log(action)
-      state.flashcards.cards.push(action.payload)
+      state.cards = [...parseMd(action.payload)]
     })
   },
 });
