@@ -3,24 +3,45 @@ import type { Card } from "./types";
 import type { RootState } from "~/store";
 import { marked } from "marked";
 
-interface FlashcardsState {
+interface Deck {
+    name: string
     cards: Card[]
+}
+
+interface FlashcardsState {
+    decks: Deck[]
+    hasLoaded: boolean
 }
 
 export const flashcardsFetch = createAsyncThunk(
   'flashcards/fetch',
   async () => {
-    const response = await fetch('http://localhost:5173/interview-questions.md')
+    const response = await fetch(`${window.location.origin}/decks.md`)
     return await response.text();
   },
 )
 
 const initialState: FlashcardsState = {
-    cards: [] as Card[]
+    decks: [] as Deck[],
+    hasLoaded: false
 }
 
-function parseMd(str: string) {
-    return str.split('###').map(block => ({ question: marked(block.split('\n')[0]), answer: marked(block.split('\n').slice(1).join('\n'))}) as Card)
+function parseMd(str: string): Deck[] {
+    return str.split(/^#\ |\n#\ /).filter((s) => s.length).map((deck) => {
+        const cards = deck.split(/\n## /)
+        cards.shift()
+        return {
+            name: deck.split(/\n/)[0],
+            cards: cards.map((card) => {
+                const c = card.split(/\n/)
+                const question = c.shift()
+                return {
+                    question, 
+                    answer: marked(c.join('\n'))
+                } as Card
+            })
+        }
+    })
 }
 
 export const flashcardsSlice = createSlice({
@@ -29,11 +50,14 @@ export const flashcardsSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
     builder.addCase(flashcardsFetch.fulfilled, (state, action) => {
-      state.cards = [...parseMd(action.payload)]
+      state.decks = [...parseMd(action.payload)]
+      state.hasLoaded = true
     })
   },
 });
 
 export default flashcardsSlice.reducer;
 
-export const selectCards = (state: RootState) => state.flashcards.cards
+export const selectCards = (state: RootState) => state.flashcards.decks
+
+export const selectLoaded = (state: RootState) => state.flashcards.hasLoaded
