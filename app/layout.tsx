@@ -14,7 +14,7 @@ export default function layout() {
     
     return (
         <div className='h-dvh'>
-            <div className='flex flex-row justify-center items-center h-full p-2 lg:p-8'>
+            <div className='flex flex-row justify-center items-center h-full px-2 py-8 lg:p-8'>
                 { hasLoaded ? <Outlet /> : <p>Loading...</p>}
             </div>
         </div>
